@@ -19,7 +19,11 @@ class Voucher extends Model
         'code',
         'data',
         'expires_at',
-        'quantity'
+        'quantity',
+        'type',
+        'value',
+        'user_id',
+        'quantity_per_user',
     ];
 
     /**
@@ -54,7 +58,8 @@ class Voucher extends Model
      */
     public function users()
     {
-        return $this->belongsToMany(config('vouchers.user_model'), config('vouchers.relation_table'))->withPivot('redeemed_at');
+        return $this->belongsToMany(config('vouchers.user_model'), config('vouchers.relation_table'))
+            ->withPivot(['redeemed_at','quantity']);
     }
 
     /**
@@ -82,7 +87,7 @@ class Voucher extends Model
      */
     public function isNotExpired()
     {
-        return ! $this->isExpired();
+        return !$this->isExpired();
     }
 
     /**
@@ -105,4 +110,31 @@ class Voucher extends Model
         return (!$this->hasLimitedQuantity() || $this->quantity_left > 0) ? false : true;
     }
 
+    public function getAssociatedUser() {
+        return $this->user_id;
+    }
+
+    public function getQuantityPerUser() {
+        return $this->quantity_per_user;
+    }
+
+    public function getDiscount($total, $decimals = 2, $decimalSeparator = '.', $thousandsSeparator = '')
+    {
+        switch ($this->type) {
+            case 'total':
+                $discount = $total;
+                break;
+            case 'percentage':
+                $discount = $total * ($this->value / 100);
+                break;
+            case 'fixed':
+                $discount = $total - $this->value;
+                break;
+            default:
+                $discount = 0;
+                break;
+        }
+
+        return number_format($discount, $decimals, $decimalSeparator, $thousandsSeparator);
+    }
 }
