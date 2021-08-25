@@ -20,7 +20,7 @@ trait CanRedeemVouchers
      */
     public function redeemCode(string $code)
     {
-        return Vouchers::redeemByCode($this,$code);
+        return Vouchers::redeemCode($this,$code);
 
     }
 
@@ -33,7 +33,7 @@ trait CanRedeemVouchers
      */
     public function redeemVoucher(Voucher $voucher)
     {
-        return Vouchers::redeem($this,$voucher);
+        return Vouchers::redeemVoucher($this,$voucher);
     }
 
     /**

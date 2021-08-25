@@ -144,7 +144,7 @@ class Vouchers
             DB::commit();
         }
 
-        event(new VoucherRedeemed($user, $this));
+        event(new VoucherRedeemed($user, $voucher));
         return $voucher;
 
     }
