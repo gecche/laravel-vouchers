@@ -2,6 +2,7 @@
 
 namespace BeyondCode\Vouchers\Models;
 
+use BeyondCode\Vouchers\Events\VoucherRedeemed;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
@@ -17,7 +18,8 @@ class Voucher extends Model
         'model_type',
         'code',
         'data',
-        'expires_at'
+        'expires_at',
+        'quantity'
     ];
 
     /**
@@ -82,4 +84,25 @@ class Voucher extends Model
     {
         return ! $this->isExpired();
     }
+
+    /**
+     * Check if code has a limited quantity.
+     *
+     * @return bool
+     */
+    public function hasLimitedQuantity()
+    {
+        return !is_null($this->quantity);
+    }
+
+    /**
+     * Check if code has been used as many times as the quantity.
+     *
+     * @return bool
+     */
+    public function isSoldOut()
+    {
+        return (!$this->hasLimitedQuantity() || $this->quantity_left > 0) ? false : true;
+    }
+
 }

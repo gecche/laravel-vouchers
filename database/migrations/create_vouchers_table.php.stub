@@ -19,6 +19,8 @@ class CreateVouchersTable extends Migration
             $table->string('code', 32)->unique();
             $table->morphs('model');
             $table->text('data')->nullable();
+            $table->unsignedInteger('quantity')->nullable();
+            $table->unsignedInteger('quantity_left')->nullable();
             $table->timestamp('expires_at')->nullable();
             $table->timestamps();
         });

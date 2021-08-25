@@ -2,9 +2,9 @@
 
 namespace BeyondCode\Vouchers\Traits;
 
+use BeyondCode\Vouchers\Exceptions\VoucherSoldOut;
 use BeyondCode\Vouchers\Facades\Vouchers;
 use BeyondCode\Vouchers\Models\Voucher;
-use BeyondCode\Vouchers\Events\VoucherRedeemed;
 use BeyondCode\Vouchers\Exceptions\VoucherExpired;
 use BeyondCode\Vouchers\Exceptions\VoucherIsInvalid;
 use BeyondCode\Vouchers\Exceptions\VoucherAlreadyRedeemed;
@@ -20,22 +20,8 @@ trait CanRedeemVouchers
      */
     public function redeemCode(string $code)
     {
-        $voucher = Vouchers::check($code);
+        return Vouchers::redeemByCode($this,$code);
 
-        if ($voucher->users()->wherePivot('user_id', $this->id)->exists()) {
-            throw VoucherAlreadyRedeemed::create($voucher);
-        }
-        if ($voucher->isExpired()) {
-            throw VoucherExpired::create($voucher);
-        }
-
-        $this->vouchers()->attach($voucher, [
-            'redeemed_at' => now()
-        ]);
-
-        event(new VoucherRedeemed($this, $voucher));
-
-        return $voucher;
     }
 
     /**
@@ -47,7 +33,7 @@ trait CanRedeemVouchers
      */
     public function redeemVoucher(Voucher $voucher)
     {
-        return $this->redeemCode($voucher->code);
+        return Vouchers::redeem($this,$voucher);
     }
 
     /**

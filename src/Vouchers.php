@@ -2,16 +2,20 @@
 
 namespace BeyondCode\Vouchers;
 
+use BeyondCode\Vouchers\Events\VoucherRedeemed;
+use BeyondCode\Vouchers\Exceptions\VoucherAlreadyRedeemed;
 use BeyondCode\Vouchers\Exceptions\VoucherExpired;
 use BeyondCode\Vouchers\Exceptions\VoucherIsInvalid;
+use BeyondCode\Vouchers\Exceptions\VoucherSoldOut;
 use BeyondCode\Vouchers\Models\Voucher;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Vouchers
 {
     /** @var VoucherGenerator */
     private $generator;
-    /** @var \BeyondCode\Vouchers\Models\Voucher  */
+    /** @var \BeyondCode\Vouchers\Models\Voucher */
     private $voucherModel;
 
     public function __construct(VoucherGenerator $generator)
@@ -45,7 +49,7 @@ class Vouchers
      * @param null $expires_at
      * @return array
      */
-    public function create(Model $model, int $amount = 1, array $data = [], $expires_at = null)
+    public function create(Model $model, int $amount = 1, array $data = [], $expires_at = null, $quantity = null)
     {
         $vouchers = [];
 
@@ -56,6 +60,8 @@ class Vouchers
                 'code' => $voucherCode,
                 'data' => $data,
                 'expires_at' => $expires_at,
+                'quantity' => $quantity,
+                'quantity_left' => $quantity,
             ]);
         }
 
@@ -64,22 +70,32 @@ class Vouchers
 
     /**
      * @param string $code
-     * @throws VoucherIsInvalid
-     * @throws VoucherExpired
      * @return Voucher
+     * @throws VoucherExpired
+     * @throws VoucherIsInvalid
      */
-    public function check(string $code)
+    public function check(Voucher $voucher)
+    {
+        if ($voucher->isExpired()) {
+            throw VoucherExpired::create($voucher);
+        }
+        if ($voucher->isSoldout()) {
+            throw VoucherSoldOut::create($voucher);
+        }
+
+        return $voucher;
+    }
+
+    public function checkByCode(string $code)
     {
         $voucher = $this->voucherModel->whereCode($code)->first();
 
         if (is_null($voucher)) {
             throw VoucherIsInvalid::withCode($code);
         }
-        if ($voucher->isExpired()) {
-            throw VoucherExpired::create($voucher);
-        }
 
-        return $voucher;
+        return $this->check($voucher);
+
     }
 
     /**
@@ -94,5 +110,58 @@ class Vouchers
         }
 
         return $voucher;
+    }
+
+
+    protected function redeem($user, Voucher $voucher)
+    {
+
+        if ($voucher->users()->wherePivot('user_id', $user->id)->exists()) {
+            throw VoucherAlreadyRedeemed::create($voucher);
+        }
+
+        if (!$voucher->hasLimitedQuantity()) {
+            $user->vouchers()->attach($voucher, [
+                'redeemed_at' => now()
+            ]);
+        } else {
+
+            DB::beginTransaction();
+
+            try {
+                if ($voucher->isSoldOut()) {
+                    throw VoucherSoldOut::create($voucher);
+                }
+                $user->vouchers()->attach($voucher, [
+                    'redeemed_at' => now()
+                ]);
+                $voucher->update(['quantity_left' => $voucher->quantity_left - 1]);
+            } catch (\Exception $e) {
+                DB::rollback();
+                throw $e;
+            }
+
+            DB::commit();
+        }
+
+        event(new VoucherRedeemed($user, $this));
+        return $voucher;
+
+    }
+
+    public function redeemCode($user, string $code)
+    {
+        $voucher = $this->checkByCode($code);
+
+        return $this->redeem($user, $voucher);
+    }
+
+    public function redeemVoucher($user, Voucher $voucher)
+    {
+
+        $this->check($voucher);
+
+        return $this->redeem($user, $voucher);
+
     }
 }
