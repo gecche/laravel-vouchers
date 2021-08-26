@@ -6,6 +6,7 @@ use BeyondCode\Vouchers\Events\VoucherRedeemed;
 use BeyondCode\Vouchers\Exceptions\VoucherAlreadyRedeemed;
 use BeyondCode\Vouchers\Exceptions\VoucherExpired;
 use BeyondCode\Vouchers\Exceptions\VoucherIsInvalid;
+use BeyondCode\Vouchers\Exceptions\VoucherNotForThatUser;
 use BeyondCode\Vouchers\Exceptions\VoucherSoldOut;
 use BeyondCode\Vouchers\Models\Voucher;
 use Illuminate\Database\Eloquent\Model;
@@ -120,6 +121,10 @@ class Vouchers
 
     protected function redeem($user, Voucher $voucher)
     {
+        $associatedUserId = $voucher->getAssociatedUserId();
+        if ($associatedUserId && $user->id != $associatedUserId) {
+            throw VoucherNotForThatUser::create($voucher,$associatedUserId);
+        }
 
         $quantityPerUser = $voucher->getQuantityPerUser();
         if (!is_null($quantityPerUser) && $voucher->users()

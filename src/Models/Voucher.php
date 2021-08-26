@@ -110,7 +110,7 @@ class Voucher extends Model
         return (!$this->hasLimitedQuantity() || $this->quantity_left > 0) ? false : true;
     }
 
-    public function getAssociatedUser() {
+    public function getAssociatedUserId() {
         return $this->user_id;
     }
 
