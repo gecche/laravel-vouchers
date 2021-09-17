@@ -80,7 +80,7 @@ class Vouchers
      * @throws VoucherExpired
      * @throws VoucherIsInvalid
      */
-    public function check(Voucher $voucher)
+    public function check(Model $voucher)
     {
         if ($voucher->isExpired()) {
             throw VoucherExpired::create($voucher);
@@ -119,7 +119,7 @@ class Vouchers
     }
 
 
-    protected function redeem($user, Voucher $voucher)
+    protected function redeem($user, Model $voucher)
     {
         $associatedUserId = $voucher->getAssociatedUserId();
         if ($associatedUserId && $user->id != $associatedUserId) {
@@ -173,7 +173,7 @@ class Vouchers
         return $this->redeem($user, $voucher);
     }
 
-    public function redeemVoucher($user, Voucher $voucher)
+    public function redeemVoucher($user, Model $voucher)
     {
 
         $this->check($voucher);
