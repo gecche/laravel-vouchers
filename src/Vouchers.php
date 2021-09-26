@@ -119,11 +119,11 @@ class Vouchers
     }
 
 
-    protected function redeem($user, Model $voucher)
+    protected function redeem($user, Model $voucher, $useTransaction = true)
     {
         $associatedUserId = $voucher->getAssociatedUserId();
         if ($associatedUserId && $user->id != $associatedUserId) {
-            throw VoucherNotForThatUser::create($voucher,$associatedUserId);
+            throw VoucherNotForThatUser::create($voucher, $associatedUserId);
         }
 
         $quantityPerUser = $voucher->getQuantityPerUser();
@@ -138,32 +138,43 @@ class Vouchers
             ]);
         } else {
 
-            DB::beginTransaction();
-
-            try {
-                if ($voucher->hasLimitedQuantity() && $voucher->isSoldOut()) {
-                    throw VoucherSoldOut::create($voucher);
-                }
-                if ($quantityPerUser && $voucher->users()
-                        ->wherePivot('user_id', $user->id)->count() > $quantityPerUser) {
-                    throw VoucherAlreadyRedeemed::create($voucher);
+            if ($useTransaction) {
+                DB::beginTransaction();
+                try {
+                    $this->redeemWithQuantity($user, $voucher, $quantityPerUser);
+                } catch (\Exception $e) {
+                    DB::rollback();
+                    throw $e;
                 }
 
-                $user->vouchers()->attach($voucher, [
-                    'redeemed_at' => now()
-                ]);
-                $voucher->update(['quantity_left' => $voucher->quantity_left - 1]);
-            } catch (\Exception $e) {
-                DB::rollback();
-                throw $e;
+                DB::commit();
+            } else {
+
             }
-
-            DB::commit();
         }
 
         event(new VoucherRedeemed($user, $voucher));
         return $voucher;
 
+    }
+
+    protected function redeemWithQuantity($user, $voucher, $quantityPerUser)
+    {
+
+        if ($voucher->hasLimitedQuantity() && $voucher->isSoldOut()) {
+            throw VoucherSoldOut::create($voucher);
+        }
+        if ($quantityPerUser && $voucher->users()
+                ->wherePivot('user_id', $user->id)->count() > $quantityPerUser) {
+            throw VoucherAlreadyRedeemed::create($voucher);
+        }
+
+        $user->vouchers()->attach($voucher, [
+            'redeemed_at' => now()
+        ]);
+        $voucher->update(['quantity_left' => $voucher->quantity_left - 1]);
+
+        return $voucher;
     }
 
     public function redeemCode($user, string $code)
