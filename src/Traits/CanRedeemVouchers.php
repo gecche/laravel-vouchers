@@ -18,9 +18,9 @@ trait CanRedeemVouchers
      * @throws VoucherAlreadyRedeemed
      * @return mixed
      */
-    public function redeemCode(string $code)
+    public function redeemCode(string $code, $useTransaction = true)
     {
-        return Vouchers::redeemCode($this,$code);
+        return Vouchers::redeemCode($this, $code, $useTransaction);
 
     }
 
@@ -31,9 +31,9 @@ trait CanRedeemVouchers
      * @throws VoucherAlreadyRedeemed
      * @return mixed
      */
-    public function redeemVoucher(Voucher $voucher)
+    public function redeemVoucher(Voucher $voucher, $useTransaction = true)
     {
-        return Vouchers::redeemVoucher($this,$voucher);
+        return Vouchers::redeemVoucher($this, $voucher, $useTransaction);
     }
 
     /**

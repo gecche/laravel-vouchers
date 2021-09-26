@@ -177,19 +177,19 @@ class Vouchers
         return $voucher;
     }
 
-    public function redeemCode($user, string $code)
+    public function redeemCode($user, string $code, $useTransaction = true)
     {
         $voucher = $this->checkByCode($code);
 
-        return $this->redeem($user, $voucher);
+        return $this->redeem($user, $voucher, $useTransaction);
     }
 
-    public function redeemVoucher($user, Model $voucher)
+    public function redeemVoucher($user, Model $voucher, $useTransaction = true)
     {
 
         $this->check($voucher);
 
-        return $this->redeem($user, $voucher);
+        return $this->redeem($user, $voucher, $useTransaction);
 
     }
 }
