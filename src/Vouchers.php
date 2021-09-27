@@ -128,7 +128,7 @@ class Vouchers
 
         $quantityPerUser = $voucher->getQuantityPerUser();
         if (!is_null($quantityPerUser) && $voucher->users()
-                ->wherePivot('user_id', $user->id)->count() > $quantityPerUser) {
+                ->wherePivot('user_id', $user->id)->count() >= $quantityPerUser) {
             throw VoucherAlreadyRedeemed::create($voucher);
         }
         return $voucher;
