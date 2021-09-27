@@ -149,7 +149,7 @@ class Vouchers
 
                 DB::commit();
             } else {
-
+                $this->redeemWithQuantity($user, $voucher, $quantityPerUser);
             }
         }
 
