@@ -51,7 +51,7 @@ class Vouchers
      * @return array
      */
     public function create(Model $model = null, int $amount = 1, array $data = [], $expires_at = null, $quantity = null,
-                                 $type = 'total', $value = null, $user_id = null, $quantity_per_user = 1)
+                                 $type = 'total', $value = null, $user_id = null, $quantity_per_user = 1, $starts_at = null)
     {
         $vouchers = [];
 
@@ -61,6 +61,7 @@ class Vouchers
                 'model_type' => $model ? $model->getMorphClass() : null,
                 'code' => $voucherCode,
                 'data' => $data,
+                'starts_at' => $expires_at,
                 'expires_at' => $expires_at,
                 'quantity' => $quantity,
                 'quantity_left' => $quantity,
@@ -82,6 +83,9 @@ class Vouchers
      */
     public function check(Model $voucher)
     {
+        if ($voucher->isNotStarted()) {
+            throw VoucherExpired::create($voucher);
+        }
         if ($voucher->isExpired()) {
             throw VoucherExpired::create($voucher);
         }

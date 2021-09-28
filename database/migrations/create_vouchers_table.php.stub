@@ -25,6 +25,7 @@ class CreateVouchersTable extends Migration
             $table->unsignedInteger('quantity_left')->nullable();
             $table->foreign('user_id')->references('id')->on('users')->nullable();
             $table->unsignedInteger('quantity_per_user')->nullable()->default(1);
+            $table->timestamp('starts_at')->nullable();
             $table->timestamp('expires_at')->nullable();
             $table->timestamps();
         });

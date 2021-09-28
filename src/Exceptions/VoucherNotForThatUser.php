@@ -2,7 +2,7 @@
 
 namespace BeyondCode\Vouchers\Exceptions;
 
-use BeyondCode\Vouchers\Models\Voucher;
+use Illuminate\Database\Eloquent\Model;
 
 class VoucherNotForThatUser extends \Exception
 {
@@ -12,12 +12,12 @@ class VoucherNotForThatUser extends \Exception
 
     protected $voucher;
 
-    public static function create(Voucher $voucher,$userId)
+    public static function create(Model $voucher,$userId)
     {
         return new static($voucher,$userId);
     }
 
-    public function __construct(Voucher $voucher,$userId)
+    public function __construct(Model $voucher,$userId)
     {
         $this->voucher = $voucher;
         $this->userId = $userId;

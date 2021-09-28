@@ -4,9 +4,9 @@ namespace BeyondCode\Vouchers\Exceptions;
 
 use Illuminate\Database\Eloquent\Model;
 
-class VoucherSoldOut extends \Exception
+class VoucherNotStarted extends \Exception
 {
-    protected $message = 'The voucher is sold out.';
+    protected $message = 'The voucher is not started.';
 
     protected $voucher;
 

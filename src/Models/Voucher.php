@@ -18,6 +18,7 @@ class Voucher extends Model
         'model_type',
         'code',
         'data',
+        'starts_at',
         'expires_at',
         'quantity',
         'type',
@@ -32,7 +33,8 @@ class Voucher extends Model
      * @var array
      */
     protected $dates = [
-        'expires_at'
+        'expires_at',
+        'starts_at',
     ];
 
     /**
@@ -88,6 +90,26 @@ class Voucher extends Model
     public function isNotExpired()
     {
         return !$this->isExpired();
+    }
+
+    /**
+     * Check if code is started.
+     *
+     * @return bool
+     */
+    public function isStarted()
+    {
+        return $this->starts_at ? Carbon::now()->lte($this->starts_at) : false;
+    }
+
+    /**
+     * Check if code is not started.
+     *
+     * @return bool
+     */
+    public function isNotStarted()
+    {
+        return !$this->isStarted();
     }
 
     /**
