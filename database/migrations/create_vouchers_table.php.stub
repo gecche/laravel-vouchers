@@ -20,13 +20,14 @@ class CreateVouchersTable extends Migration
             $table->enum('type',['total','fixed','percentage'])->default('total');
             $table->decimal('value',8,2)->nullable();
             $table->nullableMorphs('model');
-            $table->text('data')->nullable();
+            $table->mediumText('data')->nullable();
             $table->unsignedInteger('quantity')->nullable();
             $table->unsignedInteger('quantity_left')->nullable();
             $table->foreign('user_id')->references('id')->on('users')->nullable();
             $table->unsignedInteger('quantity_per_user')->nullable()->default(1);
             $table->timestamp('starts_at')->nullable();
             $table->timestamp('expires_at')->nullable();
+            $table->mediumText('conditions')->nullable();
             $table->timestamps();
         });
 

@@ -2,9 +2,12 @@
 
 namespace BeyondCode\Vouchers\Models;
 
+use BeyondCode\Vouchers\Contracts\VoucherConditionInterface;
 use BeyondCode\Vouchers\Events\VoucherRedeemed;
+use BeyondCode\Vouchers\Exceptions\VoucherConditionFails;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Arr;
 
 class Voucher extends Model
 {
@@ -25,6 +28,7 @@ class Voucher extends Model
         'value',
         'user_id',
         'quantity_per_user',
+        'conditions',
     ];
 
     /**
@@ -43,7 +47,8 @@ class Voucher extends Model
      * @var array
      */
     protected $casts = [
-        'data' => 'collection'
+        'data' => 'array',
+        'conditions' => 'array',
     ];
 
     public function __construct(array $attributes = [])
@@ -158,5 +163,28 @@ class Voucher extends Model
         }
 
         return number_format($discount, $decimals, $decimalSeparator, $thousandsSeparator);
+    }
+
+    public function checkConditions($user = null) {
+        $conditions = $this->conditions;
+        $conditionsErrors = [];
+        foreach ($conditions as $condition) {
+
+            $conditionClass = Arr::get($condition,'class');
+            if (strpos($conditionClass,"\\") === false) {
+                $conditionClass = config('voucher.conditions_namespace') . "\\" . $conditionClass;
+            }
+            $interfaces = class_implements($conditionClass);
+
+            if (!isset($interfaces[VoucherConditionInterface::class])) {
+                continue;
+            }
+
+            $condition = new $conditionClass($this,$user);
+            if (!$condition->check()) {
+                throw new VoucherConditionFails($condition);
+            }
+        }
+        return $conditionsErrors;
     }
 }

@@ -53,4 +53,10 @@ return [
      * The user model that belongs to vouchers.
      */
     'user_model' => \App\User::class,
+
+    /*
+     * The default custom condition namespace
+     */
+    'conditions_namespace' => "\\App\\Vouchers\\Conditions",
+
 ];

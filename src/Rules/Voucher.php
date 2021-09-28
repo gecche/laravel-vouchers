@@ -2,6 +2,7 @@
 
 namespace BeyondCode\Vouchers\Rules;
 
+use BeyondCode\Vouchers\Exceptions\VoucherConditionFails;
 use BeyondCode\Vouchers\Exceptions\VoucherNotStarted;
 use BeyondCode\Vouchers\Facades\Vouchers;
 use Illuminate\Contracts\Validation\Rule;
@@ -17,6 +18,7 @@ class Voucher implements Rule
     protected $wasRedeemed = false;
     protected $isSoldOut = false;
     protected $isNotStarted = false;
+    protected $customConditionFails = false;
 
     /**
      * Determine if the validation rule passes.
@@ -49,6 +51,9 @@ class Voucher implements Rule
         } catch (VoucherSoldOut $exception) {
             $this->isSoldOut = true;
             return false;
+        } catch (VoucherConditionFails $exception) {
+            $this->customConditionFails = $exception->getMessage();
+            return false;
         }
 
         return true;
@@ -72,6 +77,9 @@ class Voucher implements Rule
         }
         if ($this->isSoldOut) {
             return trans('vouchers::validation.code_sold_out');
+        }
+        if ($this->customConditionFails) {
+            return $this->customConditionFails;
         }
         return trans('vouchers::validation.code_invalid');
     }

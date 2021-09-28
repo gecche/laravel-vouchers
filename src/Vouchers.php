@@ -4,6 +4,7 @@ namespace BeyondCode\Vouchers;
 
 use BeyondCode\Vouchers\Events\VoucherRedeemed;
 use BeyondCode\Vouchers\Exceptions\VoucherAlreadyRedeemed;
+use BeyondCode\Vouchers\Exceptions\VoucherConditionFails;
 use BeyondCode\Vouchers\Exceptions\VoucherExpired;
 use BeyondCode\Vouchers\Exceptions\VoucherIsInvalid;
 use BeyondCode\Vouchers\Exceptions\VoucherNotForThatUser;
@@ -51,7 +52,8 @@ class Vouchers
      * @return array
      */
     public function create(Model $model = null, int $amount = 1, array $data = [], $expires_at = null, $quantity = null,
-                                 $type = 'total', $value = null, $user_id = null, $quantity_per_user = 1, $starts_at = null)
+                                 $type = 'total', $value = null, $user_id = null, $quantity_per_user = 1, $starts_at = null,
+                                $conditions = null)
     {
         $vouchers = [];
 
@@ -61,7 +63,7 @@ class Vouchers
                 'model_type' => $model ? $model->getMorphClass() : null,
                 'code' => $voucherCode,
                 'data' => $data,
-                'starts_at' => $expires_at,
+                'starts_at' => $starts_at,
                 'expires_at' => $expires_at,
                 'quantity' => $quantity,
                 'quantity_left' => $quantity,
@@ -69,6 +71,7 @@ class Vouchers
                 'value' => $value,
                 'user_id' => $user_id,
                 'quantity_per_user' => $quantity_per_user,
+                'conditions' => $conditions,
             ]);
         }
 
@@ -81,7 +84,7 @@ class Vouchers
      * @throws VoucherExpired
      * @throws VoucherIsInvalid
      */
-    public function check(Model $voucher)
+    public function check(Model $voucher, $user = null)
     {
         if ($voucher->isNotStarted()) {
             throw VoucherExpired::create($voucher);
@@ -92,11 +95,17 @@ class Vouchers
         if ($voucher->isSoldout()) {
             throw VoucherSoldOut::create($voucher);
         }
+        //THROWS VoucherConditionFails exception
+        $voucher->checkConditions($user);
+//        $customConditionsErrors = $voucher->checkConditions($user);
+//        if (count($customConditionsErrors) > 0) {
+//            throw VoucherConditionFails::create($voucher,);
+//        }
 
         return $voucher;
     }
 
-    public function checkByCode(string $code)
+    public function checkByCode(string $code, $user = null)
     {
         $voucher = $this->voucherModel->whereCode($code)->first();
 
@@ -104,7 +113,7 @@ class Vouchers
             throw VoucherIsInvalid::withCode($code);
         }
 
-        return $this->check($voucher);
+        return $this->check($voucher, $user);
 
     }
 
@@ -123,7 +132,7 @@ class Vouchers
 
     public function checkForRedeem($user, Model $voucher) {
 
-        $voucher = $this->check($voucher);
+        $voucher = $this->check($voucher,$user);
 
         $associatedUserId = $voucher->getAssociatedUserId();
         if ($associatedUserId && $user->id != $associatedUserId) {
@@ -216,7 +225,7 @@ class Vouchers
     public function redeemVoucher($user, Model $voucher, $useTransaction = true)
     {
 
-        $this->check($voucher);
+        $this->check($voucher,$user);
 
         return $this->redeem($user, $voucher, $useTransaction);
 
