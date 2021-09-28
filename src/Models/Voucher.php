@@ -104,7 +104,7 @@ class Voucher extends Model
      */
     public function isStarted()
     {
-        return $this->starts_at ? Carbon::now()->lte($this->starts_at) : false;
+        return $this->starts_at ? Carbon::now()->gte($this->starts_at) : true;
     }
 
     /**
@@ -165,7 +165,7 @@ class Voucher extends Model
         return number_format($discount, $decimals, $decimalSeparator, $thousandsSeparator);
     }
 
-    public function checkConditions($user = null) {
+    public function checkConditions($user = null,$additionalData = []) {
         $conditions = $this->conditions;
         $conditionsErrors = [];
         foreach ($conditions as $condition) {
@@ -180,7 +180,7 @@ class Voucher extends Model
                 continue;
             }
 
-            $condition = new $conditionClass($this,$user);
+            $condition = new $conditionClass($this,$user,$additionalData);
             if (!$condition->check()) {
                 throw new VoucherConditionFails($condition);
             }

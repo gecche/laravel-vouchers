@@ -8,6 +8,7 @@ use BeyondCode\Vouchers\Exceptions\VoucherConditionFails;
 use BeyondCode\Vouchers\Exceptions\VoucherExpired;
 use BeyondCode\Vouchers\Exceptions\VoucherIsInvalid;
 use BeyondCode\Vouchers\Exceptions\VoucherNotForThatUser;
+use BeyondCode\Vouchers\Exceptions\VoucherNotStarted;
 use BeyondCode\Vouchers\Exceptions\VoucherSoldOut;
 use BeyondCode\Vouchers\Models\Voucher;
 use Illuminate\Database\Eloquent\Model;
@@ -84,10 +85,10 @@ class Vouchers
      * @throws VoucherExpired
      * @throws VoucherIsInvalid
      */
-    public function check(Model $voucher, $user = null)
+    public function check(Model $voucher, $user = null, $additionalData = [])
     {
         if ($voucher->isNotStarted()) {
-            throw VoucherExpired::create($voucher);
+            throw VoucherNotStarted::create($voucher);
         }
         if ($voucher->isExpired()) {
             throw VoucherExpired::create($voucher);
@@ -96,7 +97,7 @@ class Vouchers
             throw VoucherSoldOut::create($voucher);
         }
         //THROWS VoucherConditionFails exception
-        $voucher->checkConditions($user);
+        $voucher->checkConditions($user,$additionalData);
 //        $customConditionsErrors = $voucher->checkConditions($user);
 //        if (count($customConditionsErrors) > 0) {
 //            throw VoucherConditionFails::create($voucher,);
@@ -105,7 +106,7 @@ class Vouchers
         return $voucher;
     }
 
-    public function checkByCode(string $code, $user = null)
+    public function checkByCode(string $code, $user = null,$additionalData = [])
     {
         $voucher = $this->voucherModel->whereCode($code)->first();
 
@@ -113,11 +114,11 @@ class Vouchers
             throw VoucherIsInvalid::withCode($code);
         }
 
-        return $this->check($voucher, $user);
+        return $this->check($voucher, $user,$additionalData );
 
     }
 
-    public function checkForRedeemByCode($user, string $code)
+    public function checkForRedeemByCode($user, string $code,$additionalData = [])
     {
 
         $voucher = $this->voucherModel->whereCode($code)->first();
@@ -126,13 +127,13 @@ class Vouchers
             throw VoucherIsInvalid::withCode($code);
         }
 
-        return $this->checkForRedeem($user, $voucher);
+        return $this->checkForRedeem($user, $voucher,$additionalData);
 
     }
 
-    public function checkForRedeem($user, Model $voucher) {
+    public function checkForRedeem($user, Model $voucher,$additionalData = []) {
 
-        $voucher = $this->check($voucher,$user);
+        $voucher = $this->check($voucher,$user,$additionalData);
 
         $associatedUserId = $voucher->getAssociatedUserId();
         if ($associatedUserId && $user->id != $associatedUserId) {
@@ -215,17 +216,17 @@ class Vouchers
         return $voucher;
     }
 
-    public function redeemCode($user, string $code, $useTransaction = true)
+    public function redeemCode($user, string $code, $useTransaction = true,$additionalData = [])
     {
-        $voucher = $this->checkByCode($code);
+        $voucher = $this->checkByCode($code,$user,$additionalData);
 
         return $this->redeem($user, $voucher, $useTransaction);
     }
 
-    public function redeemVoucher($user, Model $voucher, $useTransaction = true)
+    public function redeemVoucher($user, Model $voucher, $useTransaction = true,$additionalData = [])
     {
 
-        $this->check($voucher,$user);
+        $this->check($voucher,$user, $additionalData);
 
         return $this->redeem($user, $voucher, $useTransaction);
 
