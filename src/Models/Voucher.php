@@ -187,4 +187,10 @@ class Voucher extends Model
         }
         return $conditionsErrors;
     }
+
+    public function getConditionsAttribute($value)
+    {
+        return $this->fromJson($value) ?: [];
+    }
+
 }
