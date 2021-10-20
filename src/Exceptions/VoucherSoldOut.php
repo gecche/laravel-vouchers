@@ -18,5 +18,6 @@ class VoucherSoldOut extends \Exception
     public function __construct(Model $voucher)
     {
         $this->voucher = $voucher;
+        $this->message =  trans('vouchers::validation.code_sold_out');
     }
 }

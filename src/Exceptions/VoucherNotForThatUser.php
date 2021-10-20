@@ -21,5 +21,6 @@ class VoucherNotForThatUser extends \Exception
     {
         $this->voucher = $voucher;
         $this->userId = $userId;
+        $this->message =  trans('vouchers::validation.code_not_for_you');
     }
 }

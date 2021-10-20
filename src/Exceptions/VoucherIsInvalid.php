@@ -8,7 +8,13 @@ class VoucherIsInvalid extends \Exception
 
     public static function withCode(string $code)
     {
-        return new static('The provided code '.$code.' is invalid.', $code);
+        if ($code == 'null') {
+            $code = null;
+        }
+        if (blank($code)) {
+            return new static(trans('vouchers::validation.code_blank'),$code);
+        }
+        return new static(trans('vouchers::validation.code_invalid',['code' => ($code ?: ' ')]),$code);
     }
 
     public function __construct($message, $code)
