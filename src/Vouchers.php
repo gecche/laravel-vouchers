@@ -34,12 +34,12 @@ class Vouchers
      * @param int $amount
      * @return array
      */
-    public function generate(int $amount = 1): array
+    public function generate(int $amount = 1, $voucherModel = null): array
     {
         $codes = [];
 
         for ($i = 1; $i <= $amount; $i++) {
-            $codes[] = $this->getUniqueVoucher();
+            $codes[] = $this->getUniqueVoucher($voucherModel);
         }
 
         return $codes;
@@ -54,12 +54,14 @@ class Vouchers
      */
     public function create(Model $model = null, int $amount = 1, array $data = [], $expires_at = null, $quantity = null,
                                  $type = 'total', $value = null, $user_id = null, $quantity_per_user = 1, $starts_at = null,
-                                $conditions = null)
+                                $conditions = null, $voucherModel = null)
     {
         $vouchers = [];
 
-        foreach ($this->generate($amount) as $voucherCode) {
-            $vouchers[] = $this->voucherModel->create([
+        $voucherModel = $voucherModel ?: $this->voucherModel;
+
+        foreach ($this->generate($amount, $voucherModel) as $voucherCode) {
+            $vouchers[] = $voucherModel->create([
                 'model_id' => $model ? $model->getKey() : null,
                 'model_type' => $model ? $model->getMorphClass() : null,
                 'code' => $voucherCode,
@@ -106,9 +108,11 @@ class Vouchers
         return $voucher;
     }
 
-    public function checkByCode(string $code, $user = null,$additionalData = [])
+    public function checkByCode(string $code, $user = null,$additionalData = [], $voucherModel = null)
     {
-        $voucher = $this->voucherModel->whereCode($code)->first();
+        $voucherModel = $voucherModel ?: $this->voucherModel;
+
+        $voucher = $voucherModel->whereCode($code)->first();
 
         if (is_null($voucher)) {
             throw VoucherIsInvalid::withCode($code);
@@ -118,10 +122,12 @@ class Vouchers
 
     }
 
-    public function checkForRedeemByCode($user, string $code,$additionalData = [])
+    public function checkForRedeemByCode($user, string $code,$additionalData = [], $voucherModel = null)
     {
 
-        $voucher = $this->voucherModel->whereCode($code)->first();
+        $voucherModel = $voucherModel ?: $this->voucherModel;
+
+        $voucher = $voucherModel->whereCode($code)->first();
 
         if (is_null($voucher)) {
             throw VoucherIsInvalid::withCode($code);
@@ -151,11 +157,12 @@ class Vouchers
     /**
      * @return string
      */
-    protected function getUniqueVoucher(): string
+    protected function getUniqueVoucher($voucherModel = null): string
     {
+        $voucherModel = $voucherModel ?: $this->voucherModel;
         $voucher = $this->generator->generateUnique();
 
-        while ($this->voucherModel->whereCode($voucher)->count() > 0) {
+        while ($voucherModel->whereCode($voucher)->count() > 0) {
             $voucher = $this->generator->generateUnique();
         }
 
@@ -195,7 +202,7 @@ class Vouchers
 
     }
 
-    protected function redeemWithQuantity($user, $voucher, $quantityPerUser)
+    protected function redeemWithQuantity($user, Model $voucher, $quantityPerUser)
     {
 
         if ($voucher->hasLimitedQuantity() && $voucher->isSoldOut()) {
@@ -216,9 +223,9 @@ class Vouchers
         return $voucher;
     }
 
-    public function redeemCode($user, string $code, $useTransaction = true,$additionalData = [])
+    public function redeemCode($user, string $code, $useTransaction = true,$additionalData = [], $voucherModel = null)
     {
-        $voucher = $this->checkByCode($code,$user,$additionalData);
+        $voucher = $this->checkByCode($code,$user,$additionalData, $voucherModel);
 
         return $this->redeem($user, $voucher, $useTransaction);
     }

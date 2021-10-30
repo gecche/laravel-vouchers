@@ -20,6 +20,21 @@ class Voucher implements Rule
     protected $isNotStarted = false;
     protected $customConditionFails = false;
 
+    protected $voucherModel = null;
+    protected $user = null;
+    protected $additionalData = [];
+
+    /**
+     * Voucher constructor.
+     */
+    public function __construct($voucherModel = null, $user = null, $additionalData = [])
+    {
+        $this->voucherModel = $voucherModel;
+        $this->user = $user;
+        $this->additionalData = $additionalData;
+    }
+
+
     /**
      * Determine if the validation rule passes.
      *
@@ -30,7 +45,7 @@ class Voucher implements Rule
     public function passes($attribute, $value)
     {
         try {
-            $voucher = Vouchers::checkByCode($value);
+            $voucher = Vouchers::checkByCode($value,$this->user,$this->additionalData,$this->voucherModel);
 
             // Check if the voucher was already redeemed
             if (auth()->check() && $voucher->users()->wherePivot('user_id', auth()->id())->exists()) {
