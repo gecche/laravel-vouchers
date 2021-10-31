@@ -19,12 +19,7 @@ class VoucherConditionFails extends \Exception
     public function __construct(VoucherConditionInterface $condition)
     {
         $this->condition = $condition;
+        $this->message = $this->condition->getMessage();
     }
-
-    public function __toString()
-    {
-        return $this->condition->getMessage();
-    }
-
 
 }
