@@ -170,10 +170,10 @@ class Vouchers
     }
 
 
-    protected function redeem($user, Model $voucher, $useTransaction = true)
+    protected function redeem($user, Model $voucher, $useTransaction = true, $additionalData = [])
     {
 
-        $voucher = $this->checkForRedeem($user,$voucher);
+        $voucher = $this->checkForRedeem($user,$voucher,$additionalData);
         $quantityPerUser = $voucher->getQuantityPerUser();
 
         if (!$voucher->hasLimitedQuantity() && is_null($quantityPerUser)) {
@@ -227,7 +227,7 @@ class Vouchers
     {
         $voucher = $this->checkByCode($code,$user,$additionalData, $voucherModel);
 
-        return $this->redeem($user, $voucher, $useTransaction);
+        return $this->redeem($user, $voucher, $useTransaction, $additionalData);
     }
 
     public function redeemVoucher($user, Model $voucher, $useTransaction = true,$additionalData = [])
@@ -235,7 +235,7 @@ class Vouchers
 
         $this->check($voucher,$user, $additionalData);
 
-        return $this->redeem($user, $voucher, $useTransaction);
+        return $this->redeem($user, $voucher, $useTransaction, $additionalData);
 
     }
 }
