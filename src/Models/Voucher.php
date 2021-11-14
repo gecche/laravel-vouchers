@@ -77,6 +77,10 @@ class Voucher extends Model
         return $this->morphTo();
     }
 
+    public function getRedeemRelation() {
+        return 'vouchers';
+    }
+
     /**
      * Check if code is expired.
      *

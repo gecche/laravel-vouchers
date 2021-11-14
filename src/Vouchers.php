@@ -174,14 +174,19 @@ class Vouchers
     }
 
 
-    protected function redeem($user, Model $voucher, $useTransaction = true, $additionalData = [])
+    protected function redeem($user, Model $voucher, $useTransaction = true, $additionalData = [], $voucherModel = null)
     {
+
+        $voucherModel = $voucherModel ?: $this->voucherModel;
+        $voucherModel = app($voucherModel);
+
+        $redeemRelation = $voucherModel->getRedeemRelation();
 
         $voucher = $this->checkForRedeem($user,$voucher,$additionalData);
         $quantityPerUser = $voucher->getQuantityPerUser();
 
         if (!$voucher->hasLimitedQuantity() && is_null($quantityPerUser)) {
-            $user->vouchers()->attach($voucher, [
+            $user->$redeemRelation()->attach($voucher, [
                 'redeemed_at' => now()
             ]);
         } else {
@@ -189,7 +194,7 @@ class Vouchers
             if ($useTransaction) {
                 DB::beginTransaction();
                 try {
-                    $this->redeemWithQuantity($user, $voucher, $quantityPerUser);
+                    $this->redeemWithQuantity($user, $voucher, $quantityPerUser, $redeemRelation);
                 } catch (\Exception $e) {
                     DB::rollback();
                     throw $e;
@@ -197,7 +202,7 @@ class Vouchers
 
                 DB::commit();
             } else {
-                $this->redeemWithQuantity($user, $voucher, $quantityPerUser);
+                $this->redeemWithQuantity($user, $voucher, $quantityPerUser, $redeemRelation);
             }
         }
 
@@ -206,7 +211,7 @@ class Vouchers
 
     }
 
-    protected function redeemWithQuantity($user, Model $voucher, $quantityPerUser)
+    protected function redeemWithQuantity($user, Model $voucher, $quantityPerUser, $redeemRelation)
     {
 
         if ($voucher->hasLimitedQuantity() && $voucher->isSoldOut()) {
@@ -217,7 +222,7 @@ class Vouchers
             throw VoucherAlreadyRedeemed::create($voucher);
         }
 
-        $user->vouchers()->attach($voucher, [
+        $user->$redeemRelation()->attach($voucher, [
             'redeemed_at' => now()
         ]);
         if ($voucher->hasLimitedQuantity()) {
@@ -231,15 +236,15 @@ class Vouchers
     {
         $voucher = $this->checkByCode($code,$user,$additionalData, $voucherModel);
 
-        return $this->redeem($user, $voucher, $useTransaction, $additionalData);
+        return $this->redeem($user, $voucher, $useTransaction, $additionalData, $voucherModel);
     }
 
-    public function redeemVoucher($user, Model $voucher, $useTransaction = true,$additionalData = [])
+    public function redeemVoucher($user, Model $voucher, $useTransaction = true,$additionalData = [], $voucherModel = null)
     {
 
         $this->check($voucher,$user, $additionalData);
 
-        return $this->redeem($user, $voucher, $useTransaction, $additionalData);
+        return $this->redeem($user, $voucher, $useTransaction, $additionalData, $voucherModel);
 
     }
 }
