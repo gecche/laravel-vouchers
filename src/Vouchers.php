@@ -58,8 +58,7 @@ class Vouchers
     {
         $vouchers = [];
 
-        $voucherModel = $voucherModel ?: $this->voucherModel;
-        $voucherModel = app($voucherModel);
+        $voucherModel = $this->instantiateVoucherModel($voucherModel);
 
         foreach ($this->generate($amount, $voucherModel) as $voucherCode) {
             $vouchers[] = $voucherModel->create([
@@ -111,9 +110,8 @@ class Vouchers
 
     public function checkByCode(string $code, $user = null,$additionalData = [], $voucherModel = null)
     {
-        $voucherModel = $voucherModel ?: $this->voucherModel;
-        $voucherModel = app($voucherModel);
 
+        $voucherModel = $this->instantiateVoucherModel($voucherModel);
         $voucher = $voucherModel->whereCode($code)->first();
 
         if (is_null($voucher)) {
@@ -127,9 +125,7 @@ class Vouchers
     public function checkForRedeemByCode($user, string $code,$additionalData = [], $voucherModel = null)
     {
 
-        $voucherModel = $voucherModel ?: $this->voucherModel;
-        $voucherModel = app($voucherModel);
-
+        $voucherModel = $this->instantiateVoucherModel($voucherModel);
         $voucher = $voucherModel->whereCode($code)->first();
 
         if (is_null($voucher)) {
@@ -162,8 +158,7 @@ class Vouchers
      */
     protected function getUniqueVoucher($voucherModel = null): string
     {
-        $voucherModel = $voucherModel ?: $this->voucherModel;
-        $voucherModel = app($voucherModel);
+        $voucherModel = $this->instantiateVoucherModel($voucherModel);
         $voucher = $this->generator->generateUnique();
 
         while ($voucherModel->whereCode($voucher)->count() > 0) {
@@ -177,9 +172,7 @@ class Vouchers
     protected function redeem($user, Model $voucher, $useTransaction = true, $additionalData = [], $voucherModel = null)
     {
 
-        $voucherModel = $voucherModel ?: $this->voucherModel;
-        $voucherModel = app($voucherModel);
-
+        $voucherModel = $this->instantiateVoucherModel($voucherModel);
         $redeemRelation = $voucherModel->getRedeemRelation();
 
         $voucher = $this->checkForRedeem($user,$voucher,$additionalData);
@@ -234,6 +227,7 @@ class Vouchers
 
     public function redeemCode($user, string $code, $useTransaction = true,$additionalData = [], $voucherModel = null)
     {
+        $voucherModel = $this->instantiateVoucherModel($voucherModel);
         $voucher = $this->checkByCode($code,$user,$additionalData, $voucherModel);
 
         return $this->redeem($user, $voucher, $useTransaction, $additionalData, $voucherModel);
@@ -245,6 +239,19 @@ class Vouchers
         $this->check($voucher,$user, $additionalData);
 
         return $this->redeem($user, $voucher, $useTransaction, $additionalData, $voucherModel);
+
+    }
+
+    protected function instantiateVoucherModel($voucherModel = null) {
+        if (is_null($voucherModel)) {
+            return $this->voucherModel;
+        }
+
+        if (is_string($voucherModel)) {
+            return app($voucherModel);
+        }
+
+        return $voucherModel;
 
     }
 }
