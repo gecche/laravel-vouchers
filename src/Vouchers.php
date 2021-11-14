@@ -53,12 +53,13 @@ class Vouchers
      * @return array
      */
     public function create(Model $model = null, int $amount = 1, array $data = [], $expires_at = null, $quantity = null,
-                                 $type = 'total', $value = null, $user_id = null, $quantity_per_user = 1, $starts_at = null,
-                                $conditions = null, $voucherModel = null)
+                           $type = 'total', $value = null, $user_id = null, $quantity_per_user = 1, $starts_at = null,
+                           $conditions = null, $voucherModel = null)
     {
         $vouchers = [];
 
         $voucherModel = $voucherModel ?: $this->voucherModel;
+        $voucherModel = app($voucherModel);
 
         foreach ($this->generate($amount, $voucherModel) as $voucherCode) {
             $vouchers[] = $voucherModel->create([
@@ -111,6 +112,7 @@ class Vouchers
     public function checkByCode(string $code, $user = null,$additionalData = [], $voucherModel = null)
     {
         $voucherModel = $voucherModel ?: $this->voucherModel;
+        $voucherModel = app($voucherModel);
 
         $voucher = $voucherModel->whereCode($code)->first();
 
@@ -126,6 +128,7 @@ class Vouchers
     {
 
         $voucherModel = $voucherModel ?: $this->voucherModel;
+        $voucherModel = app($voucherModel);
 
         $voucher = $voucherModel->whereCode($code)->first();
 
@@ -160,6 +163,7 @@ class Vouchers
     protected function getUniqueVoucher($voucherModel = null): string
     {
         $voucherModel = $voucherModel ?: $this->voucherModel;
+        $voucherModel = app($voucherModel);
         $voucher = $this->generator->generateUnique();
 
         while ($voucherModel->whereCode($voucher)->count() > 0) {
