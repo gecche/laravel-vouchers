@@ -66,7 +66,8 @@ class Voucher extends Model
     public function users()
     {
         return $this->belongsToMany(config('vouchers.user_model'), config('vouchers.relation_table'))
-            ->withPivot(['redeemed_at','quantity']);
+            //->withPivot(['redeemed_at','quantity']);
+            ->withPivot('id', 'redeemed_at');
     }
 
     /**
