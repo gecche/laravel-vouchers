@@ -24,6 +24,7 @@ class Voucher extends Model
         'starts_at',
         'expires_at',
         'quantity',
+        'quantity_left',
         'type',
         'value',
         'user_id',
