@@ -219,10 +219,7 @@ class Vouchers
             'redeemed_at' => now()
         ]);
         if ($voucher->hasLimitedQuantity()) {
-            //$voucher->update(['quantity_left' => $voucher->quantity_left - 1]);
-            $voucher->quantity_left = $voucher->quantity_left - 1; //$voucher->update(['quantity_left' => $voucher->quantity_left - 1]);
-            $voucher->save();
-
+            $voucher->update(['quantity_left' => $voucher->quantity_left - 1]);
         }
 
         return $voucher;
