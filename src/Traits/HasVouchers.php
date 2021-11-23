@@ -24,11 +24,11 @@ trait HasVouchers
      * @param integer|null $quantity
      * @return Voucher[]
      */
-    public function createVouchers(int $amount, array $data = [], $expires_at = null, $quantity = null,
+    public function createVouchers(int $amount, string $name = null, array $data = [], $expires_at = null, $quantity = null,
                                    $type = 'total', $value = null, $user_id = null, $quantity_per_user = 1, $starts_at = null,
                                     $conditions = null, $voucherModel = null)
     {
-        return Vouchers::create($this, $amount, $data, $expires_at,$quantity,$type,$value,$user_id,$quantity_per_user,
+        return Vouchers::create($this, $amount, $name, $data, $expires_at,$quantity,$type,$value,$user_id,$quantity_per_user,
                             $starts_at, $conditions, $voucherModel);
     }
 
@@ -38,11 +38,11 @@ trait HasVouchers
      * @param integer|null $quantity
      * @return Voucher
      */
-    public function createVoucher(array $data = [], $expires_at = null, $quantity = null,
+    public function createVoucher(string $name = null, array $data = [], $expires_at = null, $quantity = null,
                                   $type = 'total', $value = null, $user_id = null, $quantity_per_user = 1, $starts_at = null,
                                 $conditions = null)
     {
-        return $this->createVouchers(1, $data, $expires_at,$quantity,$type,$value,$user_id,$quantity_per_user,
+        return $this->createVouchers(1, $name, $data, $expires_at,$quantity,$type,$value,$user_id,$quantity_per_user,
                                     $starts_at, $conditions)[0];
     }
 }

@@ -52,7 +52,7 @@ class Vouchers
      * @param null $expires_at
      * @return array
      */
-    public function create(Model $model = null, int $amount = 1, array $data = [], $expires_at = null, $quantity = null,
+    public function create(Model $model = null, int $amount = 1, string $name = null, array $data = [], $expires_at = null, $quantity = null,
                            $type = 'total', $value = null, $user_id = null, $quantity_per_user = 1, $starts_at = null,
                            $conditions = null, $voucherModel = null)
     {
@@ -64,6 +64,7 @@ class Vouchers
             $vouchers[] = $voucherModel->create([
                 'model_id' => $model ? $model->getKey() : null,
                 'model_type' => $model ? $model->getMorphClass() : null,
+                'name' => $name,
                 'code' => $voucherCode,
                 'data' => $data,
                 'starts_at' => $starts_at,
