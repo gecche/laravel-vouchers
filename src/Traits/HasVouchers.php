@@ -26,10 +26,10 @@ trait HasVouchers
      */
     public function createVouchers(int $amount, array $data = [], $expires_at = null, $quantity = null,
                                    $type = 'total', $value = null, $user_id = null, $quantity_per_user = 1, $starts_at = null,
-                                    $conditions = null, $voucherModel = null)
+                                   $conditions = null, $applyConditions = null, $voucherModel = null)
     {
         return Vouchers::create($this, $amount, $data, $expires_at,$quantity,$type,$value,$user_id,$quantity_per_user,
-                            $starts_at, $conditions, $voucherModel);
+            $starts_at, $conditions, $applyConditions, $voucherModel);
     }
 
     /**
@@ -40,9 +40,9 @@ trait HasVouchers
      */
     public function createVoucher(array $data = [], $expires_at = null, $quantity = null,
                                   $type = 'total', $value = null, $user_id = null, $quantity_per_user = 1, $starts_at = null,
-                                $conditions = null)
+                                  $conditions = null, $applyConditions = null)
     {
         return $this->createVouchers(1, $data, $expires_at,$quantity,$type,$value,$user_id,$quantity_per_user,
-                                    $starts_at, $conditions)[0];
+            $starts_at, $conditions, $applyConditions)[0];
     }
 }

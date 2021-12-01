@@ -28,7 +28,9 @@ class Voucher extends Model
         'value',
         'user_id',
         'quantity_per_user',
+        'quantity_left',
         'conditions',
+        'apply_conditions',
     ];
 
     /**
@@ -49,6 +51,7 @@ class Voucher extends Model
     protected $casts = [
         'data' => 'array',
         'conditions' => 'array',
+        'apply_conditions' => 'array',
     ];
 
     public function __construct(array $attributes = [])
@@ -138,7 +141,7 @@ class Voucher extends Model
      */
     public function isSoldOut()
     {
-        return (!$this->hasLimitedQuantity() || $this->quantity_left > 0) ? false : true;
+        return (!$this->hasLimitedQuantity() || $this->users->count() >= $this->quantity) ? false : true;
     }
 
     public function getAssociatedUserId() {
@@ -159,7 +162,11 @@ class Voucher extends Model
                 $discount = $total * ($this->value / 100);
                 break;
             case 'fixed':
-                $discount = $total - $this->value;
+                $discount = min($this->value,$total);
+                break;
+            case 'custom':
+                //TODO
+                $discount = 0;
                 break;
             default:
                 $discount = 0;

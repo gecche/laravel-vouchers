@@ -12,6 +12,7 @@ use BeyondCode\Vouchers\Exceptions\VoucherNotStarted;
 use BeyondCode\Vouchers\Exceptions\VoucherSoldOut;
 use BeyondCode\Vouchers\Models\Voucher;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 
 class Vouchers
@@ -54,7 +55,7 @@ class Vouchers
      */
     public function create(Model $model = null, int $amount = 1, array $data = [], $expires_at = null, $quantity = null,
                            $type = 'total', $value = null, $user_id = null, $quantity_per_user = 1, $starts_at = null,
-                           $conditions = null, $voucherModel = null)
+                           $conditions = null, $applyConditions = null, $voucherModel = null)
     {
         $vouchers = [];
 
@@ -75,6 +76,7 @@ class Vouchers
                 'user_id' => $user_id,
                 'quantity_per_user' => $quantity_per_user,
                 'conditions' => $conditions,
+                'apply_conditions' => $applyConditions,
             ]);
         }
 
@@ -178,16 +180,21 @@ class Vouchers
         $voucher = $this->checkForRedeem($user,$voucher,$additionalData);
         $quantityPerUser = $voucher->getQuantityPerUser();
 
+        $pivotRedeemData = [
+            'redeemed_at' => now(),
+            'model_id' => Arr::get($additionalData,'model_id'),
+            'model_type' => Arr::get($additionalData,'model_type'),
+            'info' => Arr::get($additionalData,'info'),
+        ];
+
         if (!$voucher->hasLimitedQuantity() && is_null($quantityPerUser)) {
-            $user->$redeemRelation()->attach($voucher, [
-                'redeemed_at' => now()
-            ]);
+            $user->$redeemRelation()->attach($voucher, $pivotRedeemData);
         } else {
 
             if ($useTransaction) {
                 DB::beginTransaction();
                 try {
-                    $this->redeemWithQuantity($user, $voucher, $quantityPerUser, $redeemRelation);
+                    $this->redeemWithQuantity($user, $voucher, $quantityPerUser, $redeemRelation, $pivotRedeemData);
                 } catch (\Exception $e) {
                     DB::rollback();
                     throw $e;
@@ -195,7 +202,7 @@ class Vouchers
 
                 DB::commit();
             } else {
-                $this->redeemWithQuantity($user, $voucher, $quantityPerUser, $redeemRelation);
+                $this->redeemWithQuantity($user, $voucher, $quantityPerUser, $redeemRelation, $pivotRedeemData);
             }
         }
 
@@ -204,7 +211,7 @@ class Vouchers
 
     }
 
-    protected function redeemWithQuantity($user, Model $voucher, $quantityPerUser, $redeemRelation)
+    protected function redeemWithQuantity($user, Model $voucher, $quantityPerUser, $redeemRelation, $pivotRedeemData)
     {
 
         if ($voucher->hasLimitedQuantity() && $voucher->isSoldOut()) {
@@ -215,12 +222,10 @@ class Vouchers
             throw VoucherAlreadyRedeemed::create($voucher);
         }
 
-        $user->$redeemRelation()->attach($voucher, [
-            'redeemed_at' => now()
-        ]);
-        if ($voucher->hasLimitedQuantity()) {
-            $voucher->update(['quantity_left' => $voucher->quantity_left - 1]);
-        }
+        $user->$redeemRelation()->attach($voucher, $pivotRedeemData);
+//        if ($voucher->hasLimitedQuantity()) {
+//            $voucher->update(['quantity_left' => $voucher->quantity_left - 1]);
+//        }
 
         return $voucher;
     }
