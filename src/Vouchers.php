@@ -180,7 +180,7 @@ class Vouchers
         $voucher = $this->checkForRedeem($user,$voucher,$additionalData);
         $quantityPerUser = $voucher->getQuantityPerUser();
 
-        $info = Arr::get($additionalData,'info');
+        $info = Arr::get($additionalData,'redeem_info');
         $info = (is_array($info) || is_object($info)) ? json_encode($info) : $info;
         $pivotRedeemData = [
             'redeemed_at' => now(),
@@ -212,7 +212,7 @@ class Vouchers
         return $voucher;
 
     }
-    
+
     protected function redeemWithQuantity($user, Model $voucher, $quantityPerUser, $redeemRelation, $pivotRedeemData)
     {
 
