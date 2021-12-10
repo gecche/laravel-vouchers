@@ -141,7 +141,7 @@ class Voucher extends Model
      */
     public function isSoldOut()
     {
-        return (!$this->hasLimitedQuantity() || $this->users->count() >= $this->quantity) ? false : true;
+        return (!$this->hasLimitedQuantity() || $this->users->count() < $this->quantity) ? false : true;
     }
 
     public function getAssociatedUserId() {
