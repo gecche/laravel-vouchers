@@ -180,11 +180,13 @@ class Vouchers
         $voucher = $this->checkForRedeem($user,$voucher,$additionalData);
         $quantityPerUser = $voucher->getQuantityPerUser();
 
+        $info = Arr::get($additionalData,'redeem_info');
+        $info = (is_array($info) || is_object($info)) ? json_encode($info) : $info;
         $pivotRedeemData = [
             'redeemed_at' => now(),
             'model_id' => Arr::get($additionalData,'model_id'),
             'model_type' => Arr::get($additionalData,'model_type'),
-            'info' => Arr::get($additionalData,'info'),
+            'info' => $info,
         ];
 
         if (!$voucher->hasLimitedQuantity() && is_null($quantityPerUser)) {
